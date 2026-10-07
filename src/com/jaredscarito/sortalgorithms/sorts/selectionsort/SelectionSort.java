@@ -1,48 +1,64 @@
 package com.jaredscarito.sortalgorithms.sorts.selectionsort;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+import com.jaredscarito.sortalgorithms.visual.Frame;
+import com.jaredscarito.sortalgorithms.visual.Trace;
+
+import java.util.List;
 
 /**
- * Created by user on 1/28/2018.
+ * Selection sort repeatedly chooses the smallest remaining value and places it next.
  */
-public class SelectionSort {
-    /**
-     *
-     * @param arr
-     * Efficiency: O (n^2)
-     */
-    public static void selectionSort(int[] arr) {
-        int[] originalArr = arr.clone();
-        System.out.println("You don't start out with any variables in this one!");
-        System.out.println("-------------------- Start program --------------------");
-        for (int i = 0; i < arr.length - 1; i++)
-        {
-            System.out.println("----------------------");
-            System.out.println("Main Loop " + i);
-            int index = i;
-            System.out.println("Sets index to current loop index. index = i; --> Index " + i);
-            for (int j = i + 1; j < arr.length; j++) {
-                if (arr[j] < arr[index]) {
-                    index = j;
-                    //Finds lowest value
-                    System.out.println("---");
-                    System.out.print("Sets lowest value index to index of --> " + String.valueOf(arr[j]) + " which has index " + j);
-                    System.out.println("---");
+public final class SelectionSort {
+    private SelectionSort() {
+    }
+
+    public static List<Frame> sort(int[] input) {
+        int[] arr = input.clone();
+        int n = arr.length;
+        Trace trace = new Trace(n);
+        trace.snap(arr, "Selection Sort",
+                "Selection sort scans the unsorted part for the smallest value, then swaps that value into the next open spot on the left. That spot is finished.",
+                -1, -1, 0, n - 1);
+
+        for (int i = 0; i < n - 1; i++) {
+            int min = i;
+            trace.snap(arr, "Start a pass",
+                    "Search from index " + i + " to the end. The smallest candidate so far is " + arr[min] + " at index " + min + ".",
+                    min, -1, i, n - 1);
+            for (int j = i + 1; j < n; j++) {
+                trace.comparison();
+                if (arr[j] < arr[min]) {
+                    min = j;
+                    trace.snap(arr, "New minimum",
+                            arr[min] + " at index " + min + " is the smallest value found so far.",
+                            min, -1, i, n - 1, j);
+                } else {
+                    trace.snap(arr, "Keep the minimum",
+                            arr[j] + " is not smaller than " + arr[min] + ". The minimum stays at index " + min + ".",
+                            min, -1, i, n - 1, j);
                 }
             }
-            int smallerNumber = arr[index];
-            //Swaps smallest number to current index of loop
-            arr[index] = arr[i];
-            System.out.println("Swaps current index with smallest number's index: " + arr[index] + " <--> " + arr[i]);
-            arr[i] = smallerNumber;
-            System.out.println(Arrays.toString(originalArr) + " --> " + Arrays.toString(arr));
-            System.out.println("----------------------");
-            try {
-                TimeUnit.SECONDS.sleep(15);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (min != i) {
+                int placed = arr[min];
+                int displaced = arr[i];
+                Trace.swap(arr, i, min);
+                trace.move();
+                trace.settle(i);
+                trace.snap(arr, "Swap into place",
+                        placed + " is the smallest remaining value, so it swaps with " + displaced + ". Index " + i + " is finished.",
+                        -1, -1, i + 1, n - 1);
+            } else {
+                trace.settle(i);
+                trace.snap(arr, "Already in place",
+                        arr[i] + " is already the smallest remaining value, so index " + i + " is finished without a swap.",
+                        -1, -1, i + 1, n - 1);
             }
         }
+
+        trace.settleAll();
+        trace.snap(arr, "Done",
+                "Each spot received the minimum of what was left. Selection sort always scans the rest of the list, even when the values are already sorted.",
+                -1, -1, 0, n - 1);
+        return trace.frames();
     }
 }

@@ -1,45 +1,75 @@
 package com.jaredscarito.sortalgorithms.searchs.binarysearch;
 
-import java.util.concurrent.TimeUnit;
+import com.jaredscarito.sortalgorithms.visual.Frame;
+import com.jaredscarito.sortalgorithms.visual.Trace;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
- * Created by user on 1/28/2018.
+ * Binary search cuts a sorted list in half on every check.
  */
-public class BinarySearch {
-    /**
-     *
-     * @param inputArr
-     * @param key
-     * Efficiency:  O (lg n)
-     */
-    public static void binarySearch(int[] inputArr, int key) {
-        System.out.println("Binary Search requires an already sorted list to work. The variables it starts off with are " +
-                "the start of the array (0) and the end (args.length-1).");
+public final class BinarySearch {
+    private BinarySearch() {
+    }
+
+    public static List<Frame> search(int[] input, int key) {
+        int[] arr = input.clone();
+        int n = arr.length;
+        Trace trace = new Trace(n);
+        if (!isSorted(arr)) {
+            trace.snap(arr, "Needs sorted data",
+                    "Binary search only works when the values are in order. This list is not sorted, so it is sorted before the search. The steps below use that sorted list.",
+                    -1, -1, 0, n - 1);
+            Arrays.sort(arr);
+            trace.snap(arr, "Sorted and ready",
+                    "The list is now sorted. Each step will check the middle and throw away the half that cannot contain " + key + ".",
+                    -1, -1, 0, n - 1);
+        } else {
+            trace.snap(arr, "Binary Search",
+                    "This list is already sorted. Low and high mark the range that might still contain " + key + ". The middle of that range is checked next.",
+                    -1, -1, 0, n - 1);
+        }
+
         int start = 0;
-        int end = inputArr.length - 1;
-        System.out.println("-------------------- Start program --------------------");
+        int end = n - 1;
         while (start <= end) {
-            System.out.println("----------------------");
-            System.out.println("Looped - " + start);
-            int mid = (start + end) / 2;
-            System.out.println("The mid is set to (start + (args.length-1)) --> " + mid);
-            if (key == inputArr[mid]) {
-                System.out.println("The key's index has been found and is --> " + mid);
+            int mid = start + (end - start) / 2;
+            trace.comparison();
+            trace.snap(arr, "Check the middle",
+                    "Low is " + start + " and high is " + end + ". Mid = " + start + " + (" + end + " - " + start + ") / 2 = " + mid + ", which holds " + arr[mid] + ".",
+                    mid, -1, start, end, start, end);
+            if (arr[mid] == key) {
+                trace.snap(arr, "Found",
+                        key + " is at index " + mid + ". Each check threw away half of the remaining values, so this is O(log n).",
+                        mid, mid, start, end);
+                return trace.frames();
             }
-            if (key < inputArr[mid]) {
-                System.out.println("The key is smaller than the current index, we subtract 1 from mid.");
+            if (key < arr[mid]) {
+                trace.snap(arr, "Discard the right half",
+                        key + " is smaller than " + arr[mid] + ", so every index after " + mid + " is too large. High moves to " + (mid - 1) + ".",
+                        mid, -1, start, mid - 1);
                 end = mid - 1;
             } else {
+                trace.snap(arr, "Discard the left half",
+                        key + " is larger than " + arr[mid] + ", so every index before " + mid + " is too small. Low moves to " + (mid + 1) + ".",
+                        mid, -1, mid + 1, end);
                 start = mid + 1;
-                System.out.println("The key is larger than the current index, we add 1 to mid.");
             }
-            try {
-                TimeUnit.SECONDS.sleep(15);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            System.out.println("----------------------");
         }
-        System.out.println("The value you were looking for was not found within the search!");
+
+        trace.snap(arr, "Not found",
+                key + " is not in the list. The range became empty, so no index was left to check.",
+                -1, -1, 0, n - 1);
+        return trace.frames();
+    }
+
+    private static boolean isSorted(int[] arr) {
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] < arr[i - 1]) {
+                return false;
+            }
+        }
+        return true;
     }
 }

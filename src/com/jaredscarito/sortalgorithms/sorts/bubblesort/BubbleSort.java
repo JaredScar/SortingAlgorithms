@@ -1,47 +1,65 @@
 package com.jaredscarito.sortalgorithms.sorts.bubblesort;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
+import com.jaredscarito.sortalgorithms.visual.Frame;
+import com.jaredscarito.sortalgorithms.visual.Trace;
+
+import java.util.List;
 
 /**
- * Created by user on 1/28/2018.
+ * Bubble sort walks neighboring pairs and swaps any that are out of order.
+ * After each pass, the next largest value is in its final place.
  */
-public class BubbleSort {
-    /**
-     *
-     * @param arr
-     * Efficiency: O (n^2)
-     */
-    public static void bubbleSort(int[] arr) {
+public final class BubbleSort {
+    private BubbleSort() {
+    }
+
+    public static List<Frame> sort(int[] input) {
+        int[] arr = input.clone();
         int n = arr.length;
-        int[] originalArr = arr.clone();
-        int temp;
-        System.out.println(Arrays.toString(originalArr));
-        System.out.println("You start out with a variable named 'temp' in which will serve the purpose as holding the last value you swapped in the loop before" +
-                " the one the program is on.");
-        System.out.println("-------------------- Start program --------------------");
-        for(int i=0; i < n; i++){
-            System.out.println("----------------------");
-            System.out.println("Main Loop " + i);
-            for(int j=1; j < (n-i); j++){
-                if(arr[j-1] > arr[j]){
-                    //swap elements
-                    temp = arr[j-1];
-                    System.out.println("Temp set to --> " + temp);
-                    arr[j-1] = arr[j];
-                    System.out.println("Set arr[j-i] to --> " + arr[j]);
-                    arr[j] = temp;
-                    System.out.println("Set arr[j] to temp --> " + arr[j]);
-                }
-                System.out.println(Arrays.toString(originalArr) + " --> " + Arrays.toString(arr));
-                System.out.println("*-*-*-*-*-*-*-*-*-*-*-");
-                try {
-                    TimeUnit.SECONDS.sleep(15);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        Trace trace = new Trace(n);
+        trace.snap(arr, "Bubble Sort",
+                "Bubble sort compares neighbors and swaps them when the left one is larger. Large values bubble to the end. If a whole pass makes no swaps, the list is already sorted and the algorithm stops.",
+                -1, -1, 0, n - 1);
+
+        boolean finishedEarly = false;
+        for (int i = 0; i < n - 1 && !finishedEarly; i++) {
+            boolean swapped = false;
+            for (int j = 1; j < n - i; j++) {
+                int left = arr[j - 1];
+                int right = arr[j];
+                trace.comparison();
+                if (left > right) {
+                    Trace.swap(arr, j - 1, j);
+                    trace.move();
+                    swapped = true;
+                    trace.snap(arr, "Swap",
+                            left + " is greater than " + right + ", so the neighbors swap.",
+                            -1, -1, 0, n - 1 - i, j - 1, j);
+                } else {
+                    trace.snap(arr, "In order",
+                            left + " is already less than or equal to " + right + ", so they stay put.",
+                            -1, -1, 0, n - 1 - i, j - 1, j);
                 }
             }
-            System.out.println("----------------------");
+            trace.settle(n - 1 - i);
+            trace.snap(arr, "End of pass " + (i + 1),
+                    "Pass " + (i + 1) + " is done. " + arr[n - 1 - i] + " is in its final place.",
+                    -1, -1, 0, n - i - 2);
+            if (!swapped) {
+                finishedEarly = true;
+            }
         }
+
+        trace.settleAll();
+        if (finishedEarly) {
+            trace.snap(arr, "Early stop",
+                    "A pass made no swaps, so every remaining value is already in order. Bubble sort can stop before finishing all of its passes.",
+                    -1, -1, 0, n - 1);
+        } else {
+            trace.snap(arr, "Done",
+                    "Every pass placed the next largest value at the end. The list is sorted.",
+                    -1, -1, 0, n - 1);
+        }
+        return trace.frames();
     }
 }

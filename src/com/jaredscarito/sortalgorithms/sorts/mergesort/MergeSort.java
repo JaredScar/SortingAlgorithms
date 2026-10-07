@@ -1,100 +1,91 @@
 package com.jaredscarito.sortalgorithms.sorts.mergesort;
 
-import java.util.Arrays;
+import com.jaredscarito.sortalgorithms.visual.Frame;
+import com.jaredscarito.sortalgorithms.visual.Trace;
+
+import java.util.List;
 
 /**
- * Created by user on 1/28/2018.
+ * Merge sort splits the list until every piece has one value, then merges those pieces in order.
  */
-public class MergeSort {
-    private static int[] numbers;
-    private static int[] helper;
-
-    private static int number;
-
-    public static void sort(int[] values) {
-        System.out.println("-------------------- Start sort() --------------------");
-        System.out.println("The sort() method is ran");
-        numbers = values;
-        System.out.println("int[] numbers is set to " + Arrays.toString(values));
-        number = values.length;
-        System.out.println("int number is set to " + values.length);
-        helper = new int[number];
-        System.out.println("int[] helper is set to " + Arrays.toString(new int[number]));
-        mergesort(0, number - 1);
-        System.out.println("We run mergeSort(0, (number - 1))");
-        System.out.println("-------------------- End sort() --------------------");
+public final class MergeSort {
+    private MergeSort() {
     }
 
-    private static void mergesort(int low, int high) {
-        // check if low is smaller than high, if not then the array is sorted
-        System.out.println("-------------------- Start mergesort() --------------------");
-        System.out.println("We check if int low < int high");
-        if (low < high) {
-            System.out.println("It is");
-            // Get the index of the element which is in the middle
-            int middle = low + (high - low) / 2;
-            System.out.println("Get the index of the element which is in middle with --> low + (high-low) / 2 = " + middle);
-            // Sort the left side of the array
-            mergesort(low, middle);
-            System.out.println("We then run mergeSort(low, middle) which is using recursion to sort left side of array");
-            // Sort the right side of the array
-            mergesort(middle + 1, high);
-            System.out.println("We then run mergeSort(middle + 1, high) which is using recursion to sort right side of array");
-            // Combine them both
-            merge(low, middle, high);
-            System.out.println("We run merge(low, middle, high) to combine them both together");
-        }
-        System.out.println("-------------------- End mergesort() --------------------");
+    public static List<Frame> sort(int[] input) {
+        int[] arr = input.clone();
+        int n = arr.length;
+        Trace trace = new Trace(n);
+        int[] helper = new int[n];
+        trace.snap(arr, "Merge Sort",
+                "Merge sort splits the list in half until each piece has one value, then merges the pieces back together. It uses a helper array, so it needs extra space. A tie takes the left value, which keeps equal items in their original order.",
+                -1, -1, 0, n - 1);
+        sort(arr, helper, 0, n - 1, trace);
+        trace.settleAll();
+        trace.snap(arr, "Done",
+                "Every piece has been merged. The work is split evenly, so the running time stays O(n log n) even on data that is already sorted.",
+                -1, -1, 0, n - 1);
+        return trace.frames();
     }
 
-    private static void merge(int low, int middle, int high) {
-        System.out.println("-------------------- Start merge() --------------------");
-        // Copy both parts into the helper array
-        for (int i = low; i <= high; i++) {
-            System.out.println("helper[i] = numbers[i]");
-            System.out.println(helper[i] + " = " + numbers[i]);
-            helper[i] = numbers[i];
+    private static void sort(int[] arr, int[] helper, int low, int high, Trace trace) {
+        if (low >= high) {
+            return;
         }
+        int mid = low + (high - low) / 2;
+        trace.snap(arr, "Split",
+                "Split indexes " + low + " to " + high + " into " + low + " to " + mid + " and " + (mid + 1) + " to " + high + ". Sort each half, then merge them.",
+                -1, -1, low, high);
+        sort(arr, helper, low, mid, trace);
+        sort(arr, helper, mid + 1, high, trace);
+        merge(arr, helper, low, mid, high, trace);
+    }
+
+    private static void merge(int[] arr, int[] helper, int low, int mid, int high, Trace trace) {
+        for (int index = low; index <= high; index++) {
+            helper[index] = arr[index];
+        }
+        trace.snap(arr, "Merge two halves",
+                "Merge " + low + " to " + mid + " with " + (mid + 1) + " to " + high + ". Compare the front of each half and write the smaller one next.",
+                -1, -1, low, high);
 
         int i = low;
-        System.out.println("int i = " + i);
-        int j = middle + 1;
-        System.out.println("int j = " + j);
+        int j = mid + 1;
         int k = low;
-        System.out.println("int k = " + k);
-        // Copy the smallest values from either the left or the right side back
-        // to the original array
-        System.out.println("Copy the smallest values from either the left side or right side back to original array");
-        while (i <= middle && j <= high) {
+        while (i <= mid && j <= high) {
+            trace.comparison();
             if (helper[i] <= helper[j]) {
-                System.out.println("- Left side -");
-                System.out.println("helper[i] is <= helper[j]");
-                System.out.println(helper[i] + " <= " + helper[j]);
-                System.out.println("numbers[k] = helper[i]");
-                System.out.println(numbers[k] + " = " + helper[i]);
-                numbers[k] = helper[i];
+                int chosen = helper[i];
+                arr[k] = chosen;
+                trace.move();
+                String why = chosen == helper[j]
+                        ? chosen + " equals the right value, so the left one is written first. That keeps the sort stable."
+                        : chosen + " from the left half is smaller than " + helper[j] + " from the right, so it is written next.";
+                trace.snap(arr, "Take from the left", why, -1, -1, low, high, k);
                 i++;
             } else {
-                System.out.println("- Right side -");
-                System.out.println("helper[i] is not <= helper[j]");
-                System.out.println("numbers[k] = helper[j]");
-                System.out.println(numbers[k] + " = " + helper[j]);
-                numbers[k] = helper[j];
+                int chosen = helper[j];
+                arr[k] = chosen;
+                trace.move();
+                trace.snap(arr, "Take from the right",
+                        chosen + " from the right half is smaller than " + helper[i] + " from the left, so it is written next.",
+                        -1, -1, low, high, k);
                 j++;
             }
             k++;
         }
-        // Copy the rest of the left side of the array into the target array
-        System.out.println("Copy rest of left side of the array into target array:");
-        while (i <= middle) {
-            System.out.println("numbers[k] = helper[i]");
-            System.out.println(numbers[k] + " = " + helper[i]);
-            numbers[k] = helper[i];
+        while (i <= mid) {
+            int value = helper[i];
+            arr[k] = value;
+            trace.move();
+            trace.snap(arr, "Copy the rest of the left",
+                    value + " is still waiting on the left, so it is copied into the next open spot. Leftover values on the right are already in place.",
+                    -1, -1, low, high, k);
             k++;
             i++;
         }
-        // Since we are sorting in-place any leftover elements from the right side
-        // are already at the right position.
-        System.out.println("-------------------- End merge() --------------------");
+        trace.snap(arr, "Halves merged",
+                "Indexes " + low + " to " + high + " are now in order.",
+                -1, -1, low, high);
     }
 }
